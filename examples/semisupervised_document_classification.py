@@ -32,6 +32,7 @@ from sklearn.feature_extraction.text import Vectorizer
 from sklearn.naive_bayes import BernoulliNB, SemisupervisedNB, MultinomialNB
 from sklearn import metrics
 
+from sklearn.semi_supervised.label_propagation import LabelSpreading
 
 # Display progress logs on stdout
 logging.basicConfig(level=logging.INFO,
@@ -199,3 +200,5 @@ print 80 * '='
 print "Naive Bayes trained with Expectation Maximization"
 benchmark(SemisupervisedNB(MultinomialNB(alpha=.01)))
 benchmark(SemisupervisedNB(BernoulliNB(alpha=.01)))
+
+benchmark(LabelSpreading(gamma=25, alpha=1))
