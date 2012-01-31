@@ -709,6 +709,7 @@ Pairwise metrics
    naive_bayes.GaussianNB
    naive_bayes.MultinomialNB
    naive_bayes.BernoulliNB
+   naive_bayes.SemisupervisedNB
 
 
 .. _neighbors_ref:
