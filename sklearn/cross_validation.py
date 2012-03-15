@@ -92,7 +92,7 @@ class LeaveOneOut(object):
 
     def __iter__(self):
         n = self.n
-        for i in xrange(n):
+        for i in range(n):
             test_index = np.zeros(n, dtype=np.bool)
             test_index[i] = True
             train_index = np.logical_not(test_index)
@@ -281,7 +281,7 @@ class KFold(object):
         n_folds = self.n_folds
         fold_size = n // n_folds
 
-        for i in xrange(n_folds):
+        for i in range(n_folds):
             test_index = np.zeros(n, dtype=np.bool)
             if i < n_folds - 1:
                 test_index[self.idxs[i * fold_size:(i + 1) * fold_size]] = True
@@ -376,7 +376,7 @@ class StratifiedKFold(object):
         n = y.size
         idx = np.argsort(y)
 
-        for i in xrange(n_folds):
+        for i in range(n_folds):
             test_index = np.zeros(n, dtype=np.bool)
             test_index[idx[i::n_folds]] = True
             train_index = np.logical_not(test_index)
