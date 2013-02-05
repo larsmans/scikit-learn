@@ -8,6 +8,12 @@
 Changelog
 ---------
 
+   - Feature importances in :class:`tree.DecisionTreeClassifier`,
+     :class:`tree.DecisionTreeRegressor` and all derived ensemble estimators
+     are now computed on the fly when accessing  the ``feature_importances_``
+     attribute. Setting ``compute_importances=True`` is no longer required.
+     By `Gilles Louppe`_.
+
    - Hyperlinks to documentation in example code on the website by
      `Martin Luessi`_.
 
