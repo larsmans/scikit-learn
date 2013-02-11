@@ -40,9 +40,9 @@ The same task has been used in a number of papers including:
 [1] http://archive.ics.uci.edu/ml/datasets/Covertype
 
 """
-from __future__ import division
+from __future__ import division, print_function
 
-print __doc__
+print(__doc__)
 
 # Author: Peter Prettenhofer <peter.prettenhofer@gmail.com>
 # License: BSD Style.
@@ -149,12 +149,14 @@ print("%s %d" % ("number of features:".ljust(25),
 print("%s %d" % ("number of classes:".ljust(25),
                  np.unique(y_train).shape[0]))
 print("%s %s" % ("data type:".ljust(25), X_train.dtype))
-print("%s %d (pos=%d, neg=%d, size=%dMB)" % ("number of train samples:".ljust(25),
-                          X_train.shape[0], np.sum(y_train == 1),
-                          np.sum(y_train == -1), int(X_train.nbytes / 1e6)))
-print("%s %d (pos=%d, neg=%d, size=%dMB)" % ("number of test samples:".ljust(25),
-                          X_test.shape[0], np.sum(y_test == 1),
-                          np.sum(y_test == -1), int(X_test.nbytes / 1e6)))
+print("%s %d (pos=%d, neg=%d, size=%dMB)"
+      % ("number of train samples:".ljust(25),
+         X_train.shape[0], np.sum(y_train == 1),
+         np.sum(y_train == -1), int(X_train.nbytes / 1e6)))
+print("%s %d (pos=%d, neg=%d, size=%dMB)"
+      % ("number of test samples:".ljust(25),
+      X_test.shape[0], np.sum(y_test == 1),
+      np.sum(y_test == -1), int(X_test.nbytes / 1e6)))
 
 
 classifiers = dict()
@@ -232,10 +234,10 @@ for name in selected_classifiers:
         op.error('classifier %r unknown' % name)
         sys.exit(1)
 
-print("")
+print()
 print("Training Classifiers")
 print("====================")
-print("")
+print()
 err, train_time, test_time = {}, {}, {}
 for name in sorted(selected_classifiers):
     print("Training %s ..." % name)
@@ -243,10 +245,10 @@ for name in sorted(selected_classifiers):
 
 ######################################################################
 ## Print classification performance
-print("")
+print()
 print("Classification performance:")
 print("===========================")
-print("")
+print()
 
 
 def print_row(clf_type, train_time, test_time, err):
@@ -261,5 +263,5 @@ print("-" * 44)
 
 for name in sorted(selected_classifiers, key=lambda name: err[name]):
     print_row(name, train_time[name], test_time[name], err[name])
-print("")
-print("")
+print()
+print()
