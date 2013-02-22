@@ -14,6 +14,11 @@ Changelog
      attribute. Setting ``compute_importances=True`` is no longer required.
      By `Gilles Louppe`_.
 
+   - :class:`LinearSVC`, :class:`SGDClassifier` and :class:`SGDRegressor`
+     now have a ``sparsify`` method that converts their ``coef_`` into a
+     sparse matrix, meaning stored models trained using these estimators
+     can be made much more compact.
+
    - Hyperlinks to documentation in example code on the website by
      `Martin Luessi`_.
 
