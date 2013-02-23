@@ -350,6 +350,12 @@ In addition, we add the following guidelines:
 
     * Use relative imports for references inside scikit-learn.
 
+    * Unit tests are an exception to the previous rule;
+      they should use absolute imports, exactly as client code would.
+      A corollary is that, if ``sklearn.foo`` exports a class or function
+      that is implemented in ``sklearn.foo.bar.baz``,
+      the test should import it from ``sklearn.foo``.
+
     * **Please don't use `import *` in any case**. It is considered harmful
       by the `official Python recommendations
       <http://docs.python.org/howto/doanddont.html#from-module-import>`_.
@@ -421,6 +427,42 @@ Here's a simple example of code using some of the above guidelines::
         random_state = check_random_state(random_state)
         i = random_state.randint(X.shape[0])
         return X[i]
+
+If you use randomness in an estimator instead of a freestanding function,
+some additional guidelines apply.
+
+First off, the estimator should take a ``random_state`` argument to its
+``__init__`` with a default value of ``None``.
+It should store that argument's value, **unmodified**,
+in an attribute ``random_state``.
+``fit`` can call ``check_random_state`` on that attribute
+to get an actual random number generator.
+If, for some reason, randomness is needed after ``fit``,
+the RNG should be stored in an attibute ``random_state_``.
+The following example should make this clear::
+
+    class GaussianNoise(BaseEstimator, TransformerMixin):
+        """This estimator ignores its input and returns random Gaussian noise.
+
+        It also does not adhere to all scikit-learn conventions,
+        but showcases how to handle randomness.
+        """
+
+        def __init__(self, n_components=100, random_state=None):
+            self.random_state = random_state
+
+        # the arguments are ignored anyway, so we make them optional
+        def fit(self, X=None, y=None):
+            self.random_state_ = check_random_state(self.random_state)
+
+        def transform(self, X):
+            n_samples = X.shape[0]
+            return self.random_state_.randn(n_samples, n_components)
+
+The reason for this setup is reproducibility:
+when an estimator is ``fit`` twice to the same data,
+it should produce an identical model both times,
+hence the validation in ``fit``, not ``__init__``.
 
 
 APIs of scikit-learn objects
@@ -621,5 +663,34 @@ advised to maintain notes on the `GitHub wiki
 Specific models
 ---------------
 
+Classifiers should accept ``y`` (target) arguments to ``fit``
+that are sequences (lists, arrays) of either strings or integers.
+They should not assume that the class labels
+are a contiguous range of integers;
+instead, they should store a list of classes
+in a ``classes_`` attribute or property.
+The order of class labels in this attribute
+should match the order in which ``predict_proba``, ``predict_log_proba``
+and ``decision_function`` return their values.
+The easiest way to achieve this is to put::
+
+    self.classes_, y = unique(y, return_inverse=True)
+
+in ``fit``.
+This return a new ``y`` that contains class indexes, rather than labels,
+in the range [0, ``n_classes``).
+``unique`` is available in ``sklearn.utils.fixes``.
+
+A classifier's ``predict`` method should return
+arrays containing class labels from ``classes_``.
+In a classifier that implements ``decision_function``,
+this can be achieved with::
+
+    def predict(self, X):
+        D = self.decision_function(X)
+        return self.classes_[np.argmax(D, axis=1)]
+
 In linear models, coefficients are stored in an array called ``coef_``,
 and the independent term is stored in ``intercept_``.
+``sklearn.linear_model.base`` contains a few base classes and mixins
+that implement common linear model patterns.
