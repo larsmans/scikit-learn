@@ -31,6 +31,10 @@ Changelog
      of the features for non-default ``feature_range`` settings. By `Andreas
      Müller`_.
 
+   - ``max_features`` in :class:`tree.DecisionTreeClassifier`,
+     :class:`tree.DecisionTreeRegressor` and all derived ensemble estimators
+     now supports percentage values. By `Gilles Louppe`_.
+
    - Fixed bug in :class:`KFold` causing imperfect class balance in some
      cases. By `Alexandre Gramfort`_ and Tadej Janež.
 
@@ -133,7 +137,6 @@ New Estimator Classes
    - :class:`ensemble.RandomTreesEmbedding`, a transformer for creating high-dimensional
      sparse representations using ensembles of totally random trees by  `Andreas Müller`_.
      See :ref:`random_trees_embedding` in the user guide.
-
 
    - :class:`manifold.SpectralEmbedding` and function
      :func:`manifold.spectral_embedding`, implementing the "laplacian
