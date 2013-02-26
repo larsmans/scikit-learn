@@ -179,7 +179,7 @@ class VectorizerMixin(object):
         # accent stripping
         if not self.strip_accents:
             strip_accents = noop
-        elif hasattr(self.strip_accents, '__call__'):
+        elif callable(self.strip_accents):
             strip_accents = self.strip_accents
         elif self.strip_accents == 'ascii':
             strip_accents = strip_accents_ascii
@@ -207,7 +207,7 @@ class VectorizerMixin(object):
 
     def build_analyzer(self):
         """Return a callable that handles preprocessing and tokenization"""
-        if hasattr(self.analyzer, '__call__'):
+        if callable(self.analyzer):
             return self.analyzer
 
         preprocess = self.build_preprocessor()
