@@ -16,6 +16,7 @@ from sklearn.datasets.samples_generator import make_classification
 from sklearn.metrics import f1_score
 from sklearn.utils import check_random_state
 from sklearn.utils import ConvergenceWarning
+from sklearn.utils.fixes import unique
 from sklearn.utils.testing import assert_greater, assert_less
 
 # toy sample
@@ -346,8 +347,8 @@ def test_auto_weight():
     X, y = iris.data[:, :2], iris.target
     unbalanced = np.delete(np.arange(y.size), np.where(y > 1)[0][::2])
 
-    classes = np.unique(y[unbalanced])
-    class_weights = compute_class_weight('auto', classes, y[unbalanced])
+    classes, y_ind = unique(y[unbalanced], return_inverse=True)
+    class_weights = compute_class_weight('auto', classes, y_ind)
     assert_true(np.argmax(class_weights) == 2)
 
     for clf in (svm.SVC(kernel='linear'), svm.LinearSVC(random_state=0),
