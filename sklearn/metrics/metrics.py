@@ -14,11 +14,14 @@ the lower the better
 #          Arnaud Joly <a.joly@ulg.ac.be>
 # License: BSD Style.
 
-from itertools import izip
+from __future__ import division
+
 import warnings
 import numpy as np
 from scipy.sparse import coo_matrix
 
+from ..externals.six.moves import zip
+from ..preprocessing import LabelBinarizer
 from ..utils import check_arrays, deprecated
 
 
@@ -389,7 +392,7 @@ def precision_recall_curve(y_true, probas_pred):
     # select all labels associated with the predictions. By incrementally
     # keeping track of the number of positive and negative labels seen so far,
     # we can calculate precision and recall.
-    for l_idx, r_idx in izip(threshold_idxs[:-1], threshold_idxs[1:]):
+    for l_idx, r_idx in zip(threshold_idxs[:-1], threshold_idxs[1:]):
         threshold_labels = y_true[l_idx:r_idx]
         n_at_threshold = r_idx - l_idx
         n_pos_at_threshold = threshold_labels.sum()
