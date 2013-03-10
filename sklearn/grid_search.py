@@ -196,10 +196,10 @@ class GridSearchCV(BaseEstimator, MetaEstimatorMixin):
     fit_params : dict, optional
         parameters to pass to the fit method
 
-    n_jobs: int, optional
-        number of jobs to run in parallel (default 1)
+    n_jobs : int, optional
+        Number of jobs to run in parallel (default 1).
 
-    pre_dispatch: int, or string, optional
+    pre_dispatch : int, or string, optional
         Controls the number of jobs that get dispatched during parallel
         execution. Reducing this number can be useful to avoid an
         explosion of memory consumption when more jobs get dispatched
@@ -216,7 +216,7 @@ class GridSearchCV(BaseEstimator, MetaEstimatorMixin):
             - A string, giving an expression as a function of n_jobs,
               as in '2*n_jobs'
 
-    iid: boolean, optional
+    iid : boolean, optional
         If True, the data is assumed to be identically distributed across
         the folds, and the loss minimized is the total loss per sample,
         and not the mean loss across the folds.
@@ -226,12 +226,12 @@ class GridSearchCV(BaseEstimator, MetaEstimatorMixin):
         Specific crossvalidation objects can be passed, see
         sklearn.cross_validation module for the list of possible objects
 
-    refit: boolean
-        refit the best estimator with the entire dataset.
+    refit : boolean
+        Refit the best estimator with the entire dataset.
         If "False", it is impossible to make predictions using
         this GridSearch instance after fitting.
 
-    verbose: integer
+    verbose : integer
         Controls the verbosity: the higher, the more messages.
 
     Examples
