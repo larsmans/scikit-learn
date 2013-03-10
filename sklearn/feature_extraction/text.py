@@ -580,7 +580,7 @@ class CountVectorizer(BaseEstimator, VectorizerMixin):
                  stop_words=None, token_pattern=r"(?u)\b\w\w+\b",
                  ngram_range=(1, 1), min_n=None, max_n=None, analyzer='word',
                  max_df=1.0, min_df=1, max_features=None,
-                 vocabulary=None, binary=False, dtype=long):
+                 vocabulary=None, binary=False, dtype=np.int64):
         self.input = input
         self.charset = charset
         self.charset_error = charset_error
@@ -629,8 +629,13 @@ class CountVectorizer(BaseEstimator, VectorizerMixin):
             i_indices = np.frombuffer(i_indices, dtype=np.intc)
         if len(j_indices) > 0:
             j_indices = np.frombuffer(j_indices, dtype=np.intc)
+
         if self.dtype == np.intc and len(values) > 0:
             values = np.frombuffer(values, dtype=np.intc)
+        else:
+            # In Python 3.2, SciPy 0.10.1, the coo_matrix ctor won't accept an
+            # array.array.
+            values = np.asarray(values, dtype=self.dtype)
 
         shape = (n_doc, max(six.itervalues(self.vocabulary_)) + 1)
         spmatrix = sp.coo_matrix((values, (i_indices, j_indices)),
@@ -824,7 +829,7 @@ class CountVectorizer(BaseEstimator, VectorizerMixin):
         for n_doc, doc in enumerate(raw_documents):
             term_counts = Counter(analyze(doc))
 
-            for term, count in term_counts.iteritems():
+            for term, count in six.iteritems(term_counts):
                 if term in self.vocabulary_:
                     i_indices.append(n_doc)
                     j_indices.append(self.vocabulary_[term])
@@ -1157,8 +1162,9 @@ class TfidfVectorizer(CountVectorizer):
                  stop_words=None, token_pattern=r"(?u)\b\w\w+\b",
                  min_n=None, max_n=None, ngram_range=(1, 1),
                  max_df=1.0, min_df=1,
-                 max_features=None, vocabulary=None, binary=False, dtype=long,
-                 norm='l2', use_idf=True, smooth_idf=True, sublinear_tf=False):
+                 max_features=None, vocabulary=None, binary=False,
+                 dtype=np.int64, norm='l2', use_idf=True, smooth_idf=True,
+                 sublinear_tf=False):
 
         super(TfidfVectorizer, self).__init__(
             input=input, charset=charset, charset_error=charset_error,
