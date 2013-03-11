@@ -472,8 +472,8 @@ class BaseSVC(BaseLibSVM, ClassifierMixin):
         -------
         X : array-like, shape = [n_samples, n_classes]
             Returns the probability of the sample for each class in
-            the model, where classes are ordered by arithmetical
-            order.
+            the model. The columns correspond to the classes in sorted
+            order, as they appear in the attribute `classes_`.
 
         Notes
         -----
@@ -509,8 +509,8 @@ class BaseSVC(BaseLibSVM, ClassifierMixin):
         -------
         X : array-like, shape = [n_samples, n_classes]
             Returns the log-probabilities of the sample for each class in
-            the model, where classes are ordered by arithmetical
-            order.
+            the model. The columns correspond to the classes in sorted
+            order, as they appear in the attribute `classes_`.
 
         Notes
         -----
