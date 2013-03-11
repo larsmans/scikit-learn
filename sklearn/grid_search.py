@@ -279,8 +279,8 @@ class GridSearchCV(BaseEstimator, MetaEstimatorMixin):
     reasons if individual jobs take very little time, but may raise errors if
     the dataset is large and not enough memory is available.  A workaround in
     this case is to set `pre_dispatch`. Then, the memory is copied only
-    `pre_dispatch` many times. A reasonable value for `pre_dispatch` is 2 *
-    `n_jobs`.
+    `pre_dispatch` many times. A reasonable value for `pre_dispatch` is `2 *
+    n_jobs`.
 
     See Also
     ---------
