@@ -18,7 +18,7 @@ import scipy.sparse as sp
 
 from ..base import BaseEstimator, ClusterMixin, TransformerMixin
 from ..metrics.pairwise import euclidean_distances
-from ..utils.sparsefuncs import mean_variance_axis0
+from ..utils.sparsefuncs import assign_rows_csr, mean_variance_axis0
 from ..utils import check_arrays
 from ..utils import check_random_state
 from ..utils import atleast2d_or_csr
@@ -814,7 +814,7 @@ class KMeans(BaseEstimator, ClusterMixin, TransformerMixin):
 
 def _mini_batch_step(X, x_squared_norms, centers, counts,
                      old_center_buffer, compute_squared_diff,
-                     distances=None, random_reassign=False,
+                     distances, random_reassign=False,
                      random_state=None, reassignment_ratio=.01,
                      verbose=False):
     """Incremental update of the centers for the Minibatch K-Means algorithm
@@ -838,6 +838,7 @@ def _mini_batch_step(X, x_squared_norms, centers, counts,
     distances: array, dtype float64, shape (n_samples), optional
         If not None, should be a pre-allocated array that will be used to store
         the distances of each sample to it's closest center.
+        May not be None when random_reassign is True.
 
     random_state: integer or numpy.RandomState, optional
         The generator used to initialize the centers. If an integer is
@@ -869,27 +870,26 @@ def _mini_batch_step(X, x_squared_norms, centers, counts,
             (counts <= 1), counts <= reassignment_ratio * counts.max())
         number_of_reassignments = to_reassign.sum()
         if number_of_reassignments:
-            # Pick new clusters amongst observations with a probability
-            # proportional to their closeness to their center
-            distance_to_centers = np.asarray(centers[nearest_center] - X)
-            distance_to_centers **= 2
-            distance_to_centers = distance_to_centers.sum(axis=1)
-            # Flip the ordering of the distances
-            distance_to_centers -= distance_to_centers.max()
-            distance_to_centers *= -1
+            # Pick new clusters amongst observations with probability
+            # proportional to their closeness to their center.
+            # Flip the ordering of the distances.
+            distances -= distances.max()
+            distances *= -1
             rand_vals = random_state.rand(number_of_reassignments)
-            rand_vals *= distance_to_centers.sum()
-            new_centers = np.searchsorted(distance_to_centers.cumsum(),
+            rand_vals *= distances.sum()
+            new_centers = np.searchsorted(distances.cumsum(),
                                           rand_vals)
-            new_centers = X[new_centers]
             if verbose:
                 n_reassigns = to_reassign.sum()
                 if n_reassigns:
-                    print("[_mini_batch_step] Reassigning %i cluster centers."
+                    print("[MiniBatchKMeans] Reassigning %i cluster centers."
                           % n_reassigns)
-            if sp.issparse(new_centers) and not sp.issparse(centers):
-                new_centers = new_centers.toarray()
-            centers[to_reassign] = new_centers
+
+            if sp.issparse(X) and not sp.issparse(centers):
+                assign_rows_csr(X, new_centers, np.where(to_reassign)[0],
+                                centers)
+            else:
+                centers[to_reassign] = X[new_centers]
 
     # implementation for the sparse CSR reprensation completely written in
     # cython
@@ -1268,16 +1268,18 @@ class MiniBatchKMeans(KMeans):
 
             self.counts_ = np.zeros(self.n_clusters, dtype=np.int32)
             random_reassign = False
+            distances = None
         else:
             # The lower the minimum count is, the more we do random
             # reassignment, however, we don't want to do random
             # reassignment too often, to allow for building up counts
             random_reassign = self.random_state_.randint(
                 10 * (1 + self.counts_.min())) == 0
+            distances = np.zeros(self.n_clusters, dtype=np.float64)
 
         _mini_batch_step(X, x_squared_norms, self.cluster_centers_,
                          self.counts_, np.zeros(0, np.double), 0,
-                         random_reassign=random_reassign,
+                         random_reassign=random_reassign, distances=distances,
                          random_state=self.random_state_,
                          reassignment_ratio=self.reassignment_ratio,
                          verbose=self.verbose)
