@@ -721,15 +721,17 @@ def kernel_metrics():
     return pairwise_kernel_functions
 
 
-kernel_params = {
+KERNEL_PARAMS = {
+    "additive_chi2": (),
     "chi2": (),
-    "exp_chi2": set(("gamma", )),
+    "cosine": (),
+    "exp_chi2": frozenset(["gamma"]),
     "linear": (),
-    "rbf": set(("gamma",)),
-    "sigmoid": set(("gamma", "coef0")),
-    "polynomial": set(("gamma", "degree", "coef0")),
-    "poly": set(("gamma", "degree", "coef0")),
-    "cosine": set(), }
+    "poly": frozenset(["gamma", "degree", "coef0"]),
+    "polynomial": frozenset(["gamma", "degree", "coef0"]),
+    "rbf": frozenset(["gamma"]),
+    "sigmoid": frozenset(["gamma", "coef0"]),
+}
 
 
 def pairwise_kernels(X, Y=None, metric="linear", filter_params=False,
