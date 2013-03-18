@@ -3,7 +3,7 @@ Testing for grid search module (sklearn.grid_search)
 
 """
 
-from cStringIO import StringIO
+from sklearn.externals.six.moves import cStringIO as StringIO
 import sys
 
 import numpy as np
