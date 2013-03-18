@@ -4,6 +4,7 @@ Testing for grid search module (sklearn.grid_search)
 """
 
 from sklearn.externals.six.moves import cStringIO as StringIO
+from sklearn.externals.six.moves import xrange
 import sys
 
 import numpy as np
