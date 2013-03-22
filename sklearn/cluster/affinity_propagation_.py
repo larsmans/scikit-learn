@@ -63,7 +63,7 @@ def affinity_propagation(S, preference=None, p=None, convergence_iter=15,
 
     Notes
     -----
-    See examples/plot_affinity_propagation.py for an example.
+    See examples/cluster/plot_affinity_propagation.py for an example.
 
     References
     ----------
