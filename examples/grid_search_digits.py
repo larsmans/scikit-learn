@@ -52,8 +52,8 @@ for score_name, score_func in scores:
     print "# Tuning hyper-parameters for %s" % score_name
     print
 
-    clf = GridSearchCV(SVC(C=1), tuned_parameters, score_func=score_func)
-    clf.fit(X_train, y_train, cv=5)
+    clf = GridSearchCV(SVC(C=1), tuned_parameters, cv=5, score_func=score_func)
+    clf.fit(X_train, y_train)
 
     print "Best parameters set found on development set:"
     print
