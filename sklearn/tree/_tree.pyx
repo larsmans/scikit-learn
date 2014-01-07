@@ -1068,7 +1068,7 @@ cdef class BestSplitter(Splitter):
             for p in range(start, end):
                 Xf[p] = X[X_sample_stride * samples[p]
                           + X_fx_stride * current_feature]
-            sort(Xf + start, samples + start, end - start)
+            qsort(Xf + start, samples + start, end - start)
 
             # Evaluate all splits
             self.criterion.reset()
@@ -1150,6 +1150,66 @@ cdef inline void swap(DTYPE_t* Xf, SIZE_t* samples, SIZE_t i, SIZE_t j) nogil:
     # Helper for sort
     Xf[i], Xf[j] = Xf[j], Xf[i]
     samples[i], samples[j] = samples[j], samples[i]
+
+
+cdef inline DTYPE_t median3(DTYPE_t* Xf, SIZE_t n) nogil:
+    # Median of three pivot selection, after Bentley and McIlroy (1993).
+    # Engineering a sort function. SP&E. Requires 8/3 comparisons on average.
+    cdef DTYPE_t a = Xf[0], b = Xf[n / 2], c = Xf[n - 1]
+    if a < b:
+        if b < c:
+            return b
+        elif a < c:
+            return c
+        else:
+            return a
+    elif b < c:
+        if a < c:
+            return a
+        else:
+            return c
+    else:
+        return b
+
+
+# Quicksort with median of 3 pivot selection and 3-way partition function
+# (robust to repeated elements, e.g. lots of zero features).
+cdef void qsort(DTYPE_t* Xf, SIZE_t *samples, SIZE_t n) nogil:
+    cdef DTYPE_t pivot
+    cdef SIZE_t i, l, r
+
+    while n > 2:
+        pivot = median3(Xf, n)
+
+        # Three-way partition. Postcondition: input partitioned as
+        # [<pivot (l) =pivot (r) >pivot].
+        i = l = 0
+        r = n
+        while i < r:
+            if Xf[i] < pivot:
+                swap(Xf, samples, i, l)
+                i += 1
+                l += 1
+            elif Xf[i] > pivot:
+                r -= 1
+                swap(Xf, samples, i, r)
+            else:
+                i += 1
+
+        l -= 1
+        r += 1
+
+        if l < n - r:
+            qsort(Xf, samples, l)
+            Xf += r
+            samples += r
+            n -= r
+        else:
+            qsort(Xf + r, samples + r, n - r)
+            n = l
+
+    if n == 2 and Xf[0] > Xf[1]:
+        swap(Xf, samples, 0, 1)
 
 
 cdef inline void sift_down(DTYPE_t* Xf, SIZE_t* samples,
