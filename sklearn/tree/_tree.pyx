@@ -962,7 +962,7 @@ cdef class Splitter:
         self.features = features
         self.n_features = n_features
 
-        cdef DTYPE_t *fv = <DTYPE_t*> realloc(self.feature_values,
+        cdef DTYPE_t* fv = <DTYPE_t*> realloc(self.feature_values,
                                               n_samples * sizeof(DTYPE_t))
         if fv == NULL:
             raise MemoryError()
@@ -1022,6 +1022,7 @@ cdef class BestSplitter(Splitter):
         cdef SIZE_t n_features = self.n_features
 
         cdef DTYPE_t* X = self.X
+        cdef DTYPE_t* Xf = self.feature_values
         cdef SIZE_t X_sample_stride = self.X_sample_stride
         cdef SIZE_t X_fx_stride = self.X_fx_stride
         cdef SIZE_t max_features = self.max_features
@@ -1049,8 +1050,6 @@ cdef class BestSplitter(Splitter):
         cdef SIZE_t partition_start
         cdef SIZE_t partition_end
 
-        cdef DTYPE_t* Xf = self.feature_values
-
         for f_idx in range(n_features):
             # Draw a feature at random
             f_i = n_features - f_idx - 1
@@ -1068,6 +1067,7 @@ cdef class BestSplitter(Splitter):
             for p in range(start, end):
                 Xf[p] = X[X_sample_stride * samples[p]
                           + X_fx_stride * current_feature]
+
             qsort(Xf + start, samples + start, end - start)
 
             # Evaluate all splits
@@ -1181,8 +1181,7 @@ cdef void qsort(DTYPE_t* Xf, SIZE_t *samples, SIZE_t n) nogil:
     while n > 2:
         pivot = median3(Xf, n)
 
-        # Three-way partition. Postcondition: input partitioned as
-        # [<pivot (l) =pivot (r) >pivot].
+        # Three-way partition
         i = l = 0
         r = n
         while i < r:
@@ -1391,7 +1390,8 @@ cdef class RandomSplitter(Splitter):
             p = start
 
             while p < partition_end:
-                if X[X_sample_stride * samples[p] + X_fx_stride * best_feature] <= best_threshold:
+                if X[X_sample_stride * samples[p]
+                     + X_fx_stride * best_feature] <= best_threshold:
                     p += 1
 
                 else:
@@ -1480,7 +1480,7 @@ cdef class PresortBestSplitter(Splitter):
         cdef SIZE_t n_features = self.n_features
 
         cdef DTYPE_t* X = self.X
-        cdef DTYPE_t* X_fx
+        cdef DTYPE_t* Xf = self.feature_values
         cdef SIZE_t X_sample_stride = self.X_sample_stride
         cdef SIZE_t X_fx_stride = self.X_fx_stride
         cdef INT32_t* X_argsorted = self.X_argsorted_ptr
@@ -1531,8 +1531,6 @@ cdef class PresortBestSplitter(Splitter):
 
             current_feature = features[f_i]
 
-            X_fx = X + (X_fx_stride * current_feature)
-
             # Extract ordering from X_argsorted
             p = start
 
@@ -1540,6 +1538,8 @@ cdef class PresortBestSplitter(Splitter):
                 j = X_argsorted[X_argsorted_stride * current_feature + i]
                 if sample_mask[j] == 1:
                     samples[p] = j
+                    Xf[p] = X[X_sample_stride * j
+                              + X_fx_stride * current_feature]
                     p += 1
 
             # Evaluate all splits
@@ -1547,9 +1547,7 @@ cdef class PresortBestSplitter(Splitter):
             p = start
 
             while p < end:
-                while ((p + 1 < end) and
-                       (X_fx[X_sample_stride * samples[p + 1]] <=
-                        X_fx[X_sample_stride * samples[p]] + EPSILON_FLT)):
+                while p + 1 < end and Xf[p + 1] <= Xf[p] + EPSILON_FLT:
                     p += 1
 
                 # (p + 1 >= end) or (X[samples[p + 1], current_feature] >
@@ -1564,7 +1562,7 @@ cdef class PresortBestSplitter(Splitter):
                     # Reject if min_samples_leaf is not guaranteed
                     if (((current_pos - start) < min_samples_leaf) or
                         ((end - current_pos) < min_samples_leaf)):
-                        continue
+                       continue
 
                     self.criterion.update(current_pos)
                     current_improvement = self.criterion.impurity_improvement(impurity)
@@ -1577,11 +1575,10 @@ cdef class PresortBestSplitter(Splitter):
                         best_pos = current_pos
                         best_feature = current_feature
 
-                        current_threshold = (X_fx[X_sample_stride * samples[p - 1]] +
-                                             X_fx[X_sample_stride * samples[p]]) / 2.0
+                        current_threshold = (Xf[p - 1] + Xf[p]) / 2.0
 
-                        if current_threshold == X_fx[X_sample_stride * samples[p]]:
-                            current_threshold = X_fx[X_sample_stride * samples[p - 1]]
+                        if current_threshold == Xf[p]:
+                            current_threshold = Xf[p - 1]
 
                         best_threshold = current_threshold
 
@@ -1601,7 +1598,8 @@ cdef class PresortBestSplitter(Splitter):
             p = start
 
             while p < partition_end:
-                if X[X_sample_stride * samples[p] + X_fx_stride * best_feature] <= best_threshold:
+                if X[X_sample_stride * samples[p]
+                     + X_fx_stride * best_feature] <= best_threshold:
                     p += 1
 
                 else:
