@@ -1196,9 +1196,6 @@ cdef void qsort(DTYPE_t* Xf, SIZE_t *samples, SIZE_t n) nogil:
             else:
                 i += 1
 
-        l -= 1
-        r += 1
-
         if l < n - r:
             qsort(Xf, samples, l)
             Xf += r
