@@ -13,8 +13,7 @@
 #
 # Licence: BSD 3 clause
 
-from libc.stdio cimport perror, printf
-from libc.stdlib cimport calloc, free, malloc, realloc, abort
+from libc.stdlib cimport calloc, free, malloc, realloc
 from libc.string cimport memcpy, memset
 from libc.math cimport log as ln
 from cpython cimport Py_INCREF, PyObject
@@ -66,12 +65,12 @@ NODE_DTYPE = np.dtype({
               'n_samples'],
     'formats': [np.intp, np.intp, np.intp, np.float64, np.float64, np.intp],
     'offsets': [
-        <Py_ssize_t>&(<Node*> NULL).left_child,
-        <Py_ssize_t>&(<Node*> NULL).right_child,
-        <Py_ssize_t>&(<Node*> NULL).feature,
-        <Py_ssize_t>&(<Node*> NULL).threshold,
-        <Py_ssize_t>&(<Node*> NULL).impurity,
-        <Py_ssize_t>&(<Node*> NULL).n_samples,
+        <Py_ssize_t> &(<Node*> NULL).left_child,
+        <Py_ssize_t> &(<Node*> NULL).right_child,
+        <Py_ssize_t> &(<Node*> NULL).feature,
+        <Py_ssize_t> &(<Node*> NULL).threshold,
+        <Py_ssize_t> &(<Node*> NULL).impurity,
+        <Py_ssize_t> &(<Node*> NULL).n_samples,
     ]
 })
 
