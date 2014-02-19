@@ -68,6 +68,7 @@ def _alpha_grid(X, y, Xy=None, l1_ratio=1.0, fit_intercept=True,
     """
     n_samples = len(y)
 
+    sparse_center = False
     if Xy is None:
         X_sparse = sparse.isspmatrix(X)
         sparse_center = X_sparse and (fit_intercept or normalize)
@@ -1067,7 +1068,6 @@ class LinearModelCV(six.with_metaclass(ABCMeta, LinearModel)):
         # Compute path for all folds and compute MSE to get the best alpha
         folds = list(cv)
         best_mse = np.inf
-        all_mse_paths = list()
 
         # We do a double for loop folded in one, in order to be able to
         # iterate in parallel on l1_ratio and folds
