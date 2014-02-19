@@ -9,9 +9,10 @@ from scipy.optimize import fmin_l_bfgs_b
 from .base import LinearClassifierMixin, SparseCoefMixin
 from ..base import BaseEstimator
 from ..feature_selection.from_model import _LearntSelectorMixin
-from ..preprocessing import LabelBinarizer
+from ..preprocessing import LabelBinarizer, LabelEncoder
 from ..svm.base import BaseLibLinear
-from ..utils import atleast2d_or_csr
+from ..utils import (atleast2d_or_csr, check_arrays, column_or_1d,
+                     compute_class_weight)
 from ..utils.extmath import logsumexp, safe_sparse_dot
 
 
@@ -223,11 +224,23 @@ class MultinomialLR(BaseEstimator, _LogRegMixin):
             Target vector for the samples in X.
         """
 
-        X = atleast2d_or_csr(X)
-        lbin = LabelBinarizer()
-        Y = lbin.fit_transform(y)
+        X = atleast2d_or_csr(X, dtype=float)
+        y = column_or_1d(y, warn=True)
+        X, y = check_arrays(X, y)
+
+        self._lb = LabelBinarizer()
+        Y = self._lb.fit_transform(y)
         if Y.shape[1] == 1:
             Y = np.hstack([1 - Y, Y])
+
+        # compute_class_weight cannot handle negative integers, so
+        # transform to (0, n_classes - 1)
+        y_enc = LabelEncoder().fit_transform(y)
+        self.class_weight_ = compute_class_weight(
+            self.class_weight, self.classes_, y_enc)
+        if self.class_weight:
+            print self.class_weight_
+            Y = Y * self.class_weight_ / np.sum(self.class_weight_)
 
         # Fortran-ordered so we can slice off the intercept in loss_grad and
         # get contiguous arrays.
@@ -247,7 +260,6 @@ class MultinomialLR(BaseEstimator, _LogRegMixin):
         else:
             intercept = np.zeros(Y.shape[1])
 
-        self.classes_ = lbin.classes_
         if len(self.classes_) == 2:
             w = w[1].reshape(1, -1)
             intercept = intercept[1:]
@@ -256,15 +268,18 @@ class MultinomialLR(BaseEstimator, _LogRegMixin):
 
         return self
 
-
-def _sqnorm(x):
-    x = x.ravel()
-    return np.dot(x, x)
+    @property
+    def classes_(self):
+        return self._lb.classes_
 
 
 def _loss_grad(w, X, Y, C, fit_intercept):
     # Cross-entropy loss and its gradient for multinomial logistic regression
     # (Bishop 2006, p. 209) with L2 penalty (weight decay).
+
+    # Used for regularisation later.
+    l2_ = np.dot(w, w)
+
     w = w.reshape(Y.shape[1], -1)
     if fit_intercept:
         intercept = w[:, -1]
@@ -275,8 +290,7 @@ def _loss_grad(w, X, Y, C, fit_intercept):
     p = safe_sparse_dot(X, w.T)
     p += intercept
     p -= logsumexp(p, axis=1).reshape(-1, 1)
-
-    loss = (-C * (Y * p).sum()) + .5 * _sqnorm(w)
+    loss = (-C * (Y * p).sum()) + .5 * (l2_ - np.dot(intercept, intercept))
 
     p = np.exp(p, p)
     diff = p - Y
