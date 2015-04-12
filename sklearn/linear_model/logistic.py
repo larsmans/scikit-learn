@@ -911,8 +911,9 @@ class LogisticRegression(BaseEstimator, LinearClassifierMixin,
         The seed of the pseudo random number generator to use when
         shuffling the data.
 
-    solver : {'newton-cg', 'lbfgs', 'liblinear'}
+    solver : {'auto', 'newton-cg', 'lbfgs', 'liblinear'}
         Algorithm to use in the optimization problem.
+        'auto' selects Liblinear for OvR, L-BFGS for multinomial LR.
 
     tol : float, optional
         Tolerance for stopping criteria.
@@ -977,7 +978,7 @@ class LogisticRegression(BaseEstimator, LinearClassifierMixin,
 
     def __init__(self, penalty='l2', dual=False, tol=1e-4, C=1.0,
                  fit_intercept=True, intercept_scaling=1, class_weight=None,
-                 random_state=None, solver='liblinear', max_iter=100,
+                 random_state=None, solver='auto', max_iter=100,
                  multi_class='ovr', verbose=0):
 
         self.penalty = penalty
@@ -1016,20 +1017,27 @@ class LogisticRegression(BaseEstimator, LinearClassifierMixin,
 
         X, y = check_X_y(X, y, accept_sparse='csr', dtype=np.float64, order="C")
         self.classes_ = np.unique(y)
-        if self.solver not in ['liblinear', 'newton-cg', 'lbfgs']:
+        solver = self.solver
+        if solver not in ['auto', 'liblinear', 'newton-cg', 'lbfgs']:
             raise ValueError(
-                "Logistic Regression supports only liblinear, newton-cg and "
-                "lbfgs solvers, Got solver=%s" % self.solver
+                "Logistic Regression supports liblinear, newton-cg and "
+                "lbfgs solvers, or 'auto'; got solver=%r" % solver
                 )
 
-        if self.solver == 'liblinear' and self.multi_class == 'multinomial':
-            raise ValueError("Solver %s does not support a multinomial "
-                             "backend." % self.solver)
         if self.multi_class not in ['ovr', 'multinomial']:
             raise ValueError("multi_class should be either ovr or multinomial "
                              "got %s" % self.multi_class)
 
-        if self.solver == 'liblinear':
+        if self.solver == 'auto':
+            if self.multi_class == 'ovr':
+                solver = 'liblinear'
+            else:
+                solver = 'lbfgs'
+        elif self.solver == 'liblinear' and self.multi_class == 'multinomial':
+            raise ValueError("Solver %r does not support multinomial LR."
+                             % self.solver)
+
+        if solver == 'liblinear':
             self.coef_, self.intercept_, self.n_iter_ = _fit_liblinear(
                 X, y, self.C, self.fit_intercept, self.intercept_scaling,
                 self.class_weight, self.penalty, self.dual, self.verbose,
@@ -1059,7 +1067,7 @@ class LogisticRegression(BaseEstimator, LinearClassifierMixin,
             coef_, _ = logistic_regression_path(
                 X, y, pos_class=class_, Cs=[self.C],
                 fit_intercept=self.fit_intercept, tol=self.tol,
-                verbose=self.verbose, solver=self.solver,
+                verbose=self.verbose, solver=solver,
                 multi_class=self.multi_class, max_iter=self.max_iter,
                 class_weight=self.class_weight)
             self.coef_.append(coef_[0])

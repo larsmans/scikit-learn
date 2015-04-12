@@ -85,7 +85,7 @@ def test_predict_iris():
     # multiclass data correctly and give good accuracy
     # score (>0.95) for the training data.
     for clf in [LogisticRegression(C=len(iris.data)),
-                LogisticRegression(C=len(iris.data), solver='lbfgs',
+                LogisticRegression(C=len(iris.data),
                                    multi_class='multinomial'),
                 LogisticRegression(C=len(iris.data), solver='newton-cg',
                                    multi_class='multinomial')]:
